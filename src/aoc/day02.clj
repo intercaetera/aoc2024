@@ -17,9 +17,8 @@
                   (map parse-long)))))
 
 (defn asc-or-desc? [row]
-  (let [asc (sort row)
-        desc (sort #(compare %2 %1) row)]
-    (or (= row asc) (= row desc))))
+  (or (= row (sort row))
+      (= row (sort #(compare %2 %1)))))
 
 (defn valid-neighbors? [row]
   (every? (fn [[a b]]
@@ -39,10 +38,8 @@
 (defn valid-row-with-dampening? [row]
   (let [subrows (for [i (range (count row))]
                   (concat (take i row)
-                          (drop (inc i) row)))
-        row-and-subrows (cons row subrows)
-        valid-subrows (count (filter valid-row? row-and-subrows))]
-    (< 0 valid-subrows)))
+                          (drop (inc i) row)))]
+    (some valid-row? (cons row subrows))))
 
 (defn solve2 [input]
   (->> input
