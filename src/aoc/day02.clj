@@ -14,7 +14,6 @@
   (->> input
        str/split-lines
        (map #(->> (str/split % #"\s+")
-                  (apply list)
                   (map parse-long)))))
 
 (defn asc-or-desc? [row]
@@ -28,12 +27,32 @@
               (and (>= diff 1) (<= diff 3))))
           (partition 2 1 row)))
 
+(defn valid-row? [row]
+  (and (asc-or-desc? row) (valid-neighbors? row)))
+
 (defn solve [input]
   (->> input
       (parse)
-      (filter asc-or-desc?)
-      (filter valid-neighbors?)
+      (filter valid-row?)
       (count)))
+
+(defn valid-row-with-dampening? [row]
+  (or
+    (valid-row? row)
+    (let [subrows (for [i (range (count row))]
+                    (concat (take i row)
+                            (drop (inc i) row)))
+          valid-subrows (count (filter valid-row? subrows))]
+      (< 0 valid-subrows))))
+
+(defn solve2 [input]
+  (->> input
+       (parse)
+       (filter valid-row-with-dampening?)
+       (count)))
 
 (solve example-input)
 (solve (utils/read-input 2))
+
+(solve2 example-input)
+(solve2 (utils/read-input 2))
