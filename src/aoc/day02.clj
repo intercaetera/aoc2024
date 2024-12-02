@@ -37,13 +37,12 @@
       (count)))
 
 (defn valid-row-with-dampening? [row]
-  (or
-    (valid-row? row)
-    (let [subrows (for [i (range (count row))]
-                    (concat (take i row)
-                            (drop (inc i) row)))
-          valid-subrows (count (filter valid-row? subrows))]
-      (< 0 valid-subrows))))
+  (let [subrows (for [i (range (count row))]
+                  (concat (take i row)
+                          (drop (inc i) row)))
+        row-and-subrows (cons row subrows)
+        valid-subrows (count (filter valid-row? row-and-subrows))]
+    (< 0 valid-subrows)))
 
 (defn solve2 [input]
   (->> input
