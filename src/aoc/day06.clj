@@ -82,7 +82,7 @@
   (let [{:keys [height width obstacles start]} (parse input)
         state {:visited #{} :width width :height height :obstacles obstacles}
         visited (step start north state)
-        results (map #(step start north (update state :obstacles conj %))
+        results (pmap #(step start north (update state :obstacles conj %))
                      visited)]
     (count (filter #(= :loop %) results))))
 
