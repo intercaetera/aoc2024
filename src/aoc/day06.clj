@@ -54,21 +54,40 @@
 (defn hits-obstacle? [position obstacles]
   (contains? obstacles position))
 
+(defn infinite-loop? [position direction visited]
+  (contains? visited [position direction]))
+
 (defn step [position direction state]
-  (if (out-of-bounds? position (:width state) (:height state))
-    (count (:visited state))
-    (let [[x y] position
+  (cond 
+    (infinite-loop? position direction (:visited state))
+    :loop
+
+    (out-of-bounds? position (:width state) (:height state))
+    (set (map first (:visited state)))
+
+    :else (let [[x y] position
           [dx dy] direction
           next-position [(+ x dx) (+ y dy)]]
       (if (hits-obstacle? next-position (:obstacles state))
         (recur position (turn-clockwise direction) state)
         (recur next-position direction 
-               (update state :visited conj position))))))
+               (update state :visited conj [position direction]))))))
 
 (defn solve [input]
   (let [{:keys [height width obstacles start]} (parse input)
         state {:visited #{} :width width :height height :obstacles obstacles}]
-    (step start north state)))
+    (count (step start north state))))
+
+(defn solve2 [input]
+  (let [{:keys [height width obstacles start]} (parse input)
+        state {:visited #{} :width width :height height :obstacles obstacles}
+        visited (step start north state)
+        results (map #(step start north (update state :obstacles conj %))
+                     visited)]
+    (count (filter #(= :loop %) results))))
 
 (solve example-input)
-(solve (utils/read-input 6))
+(solve (utils/read-input 6)) ; 4789
+
+(solve2 example-input)
+(solve2 (utils/read-input 6)) ; 1304
