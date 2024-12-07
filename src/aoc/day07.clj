@@ -22,12 +22,16 @@
          lines)))
 
 (defn generate-possible-symbols
-  ([length] (generate-possible-symbols length [[]]))
-  ([length all-symbols] (if (= (count (first all-symbols)) length)
-                      all-symbols
-                      (recur
-                        length
-                        (mapcat (fn [symbols] [(conj symbols +) (conj symbols *)]) all-symbols)))))
+  ([length operators] (generate-possible-symbols length operators [[]]))
+  ([length operators all-symbols]
+   (if (= (count (first all-symbols)) length)
+     all-symbols
+     (recur
+       length
+       operators
+       (mapcat (fn [symbols]
+                 (map #(conj symbols %) operators))
+               all-symbols)))))
 
 (defn apply-symbols [numbers symbols]
   (if (empty? symbols) (first numbers)
@@ -35,15 +39,28 @@
           [symbol & rest-symbols] symbols]
       (recur (conj rest-numbers (symbol a b)) rest-symbols))))
 
-(defn valid-result [test numbers]
-  (let [all-symbols (generate-possible-symbols (dec (count numbers)))
-        all-results (map #(apply-symbols numbers %) all-symbols)]
-    (if (some #(= test %) all-results) test 0)))
+(defn valid-result 
+  ([test numbers] (valid-result test numbers [* +]))
+  ([test numbers operators]
+   (let [all-symbols (generate-possible-symbols (dec (count numbers)) operators)
+         all-results (map #(apply-symbols numbers %) all-symbols)]
+     (if (some #(= test %) all-results) test 0))))
 
 (defn solve [input]
   (let [lines (parse input)
         results (map #(apply valid-result %) lines)]
     (apply + results)))
 
-(solve example-input)
+(defn || [a b]
+  (parse-long (str a b)))
+
+(defn solve2 [input]
+  (let [lines (parse input)
+        results (map #(valid-result (first %) (second %) [+ * ||]) lines)]
+    (apply + results)))
+
+(solve example-input) ; 3749
 (solve (utils/read-input 7)) ; 1399219271639
+
+(solve2 example-input)
+(solve2 (utils/read-input 7)) ; 275791737999003
