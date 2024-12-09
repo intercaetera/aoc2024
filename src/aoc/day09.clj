@@ -63,11 +63,8 @@
       (compact)
       (calculate-checksum)))
 
-; (solve example-input)
-; (solve (utils/read-input 9))
-
 (defn get-layout-runs [layout]
-  (mapv vec (partition-by identity layout)))
+  (partition-by identity layout))
 
 (defn find-last-new-file-block [layout-runs skipped]
   (find-last-index
@@ -86,38 +83,47 @@
 (defn overlay [v1 v2]
   (vec (concat v1 (drop (count v1) v2))))
 
-(defn move-block [layout-runs from to]
-  (let [file (nth layout-runs from)
-        space (nth layout-runs to)
-        file-length (count file)]
-    (-> layout-runs
-        (assoc from (vec (repeat file-length nil)))
-        (assoc to (overlay file space)))))
+(defn move-block [runs from to]
+  (let [file-block (nth runs from)
+        space-block (nth runs to)
+        file-length (count file-block)
+        space-length (count space-block)
+        remaining-space (- space-length file-length)]
+    (concat
+      (take to runs)
+      (list file-block)
+      (when (pos? remaining-space)
+        (list (repeat remaining-space nil)))
+      (drop (inc to) (take from runs))
+      (list (repeat file-length nil))
+      (drop (inc from) runs))))
 
 (defn compact-blocks 
-  ([layout] (compact-blocks layout #{}))
-  ([layout processed-ids]
+  ([layout-runs] (compact-blocks layout-runs #{}))
+  ([layout-runs processed-ids]
    (print (count processed-ids) "\n")
-   (let [layout-runs (get-layout-runs layout)
-         file-idx (find-last-new-file-block layout-runs processed-ids)
+   (let [file-idx (find-last-new-file-block layout-runs processed-ids)
          file-block (nth layout-runs file-idx)
          file-id (first file-block)
          space-idx (find-first-space-block-of-size layout-runs (count file-block))]
      (if (or (nil? file-idx) (= file-id 0))
-       (map #(if (nil? %) 0 %) layout)
+       (map #(if (nil? %) 0 %) (apply concat layout-runs))
        (recur 
-         (vec (apply concat (if-not (or (nil? space-idx) (> space-idx file-idx)) 
-                              (move-block layout-runs file-idx space-idx)
-                              layout-runs)))
+         (if-not (or (nil? space-idx) (> space-idx file-idx)) 
+           (move-block layout-runs file-idx space-idx)
+           layout-runs)
          (conj processed-ids file-id))))))
 
 (defn solve2 [input]
   (-> input
       (parse)
       (generate-layout)
+      (get-layout-runs)
       (compact-blocks)
       (calculate-checksum)))
 
+(solve example-input)
+(solve (utils/read-input 9)) ; 6346871685398
 
-; (solve2 example-input)
-; (solve2 (utils/read-input 9))
+(solve2 example-input)
+(solve2 (utils/read-input 9)) ; 6373055193464
