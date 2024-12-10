@@ -39,8 +39,8 @@
         :when (zero? value)]
     [x y]))
 
-(defn dfs
-  ([grid pos] (dfs grid pos #{} #{}))
+(defn dfs-peaks
+  ([grid pos] (dfs-peaks grid pos #{} #{}))
   ([grid pos visited peaks]
    (let [height (get-in grid (reverse pos))]
      (cond
@@ -48,14 +48,35 @@
        (= height 9) (conj peaks pos)
        :else (reduce
                (fn [peaks neighbor]
-                 (dfs grid (:loc neighbor) (conj visited pos) peaks))
+                 (dfs-peaks grid (:loc neighbor) (conj visited pos) peaks))
                peaks
                (get-neighbors grid pos))))))
 
 (defn solve [input]
   (let [grid (parse input)
         trailheads (get-trailheads grid)]
-    (count (mapcat (partial dfs grid) trailheads))))
+    (count (mapcat (partial dfs-peaks grid) trailheads))))
+
+(defn dfs-paths
+  ([grid pos] (dfs-paths grid pos #{} #{}))
+  ([grid pos visited paths]
+   (let [height (get-in grid (reverse pos))]
+     (cond
+       (contains? visited pos) paths
+       (= height 9) #{(conj visited pos)}
+       :else (reduce
+               (fn [paths neighbor]
+                 (into paths (dfs-paths grid (:loc neighbor) (conj visited pos) paths)))
+               paths
+               (get-neighbors grid pos))))))
+
+(defn solve2 [input]
+  (let [grid (parse input)
+        trailheads (get-trailheads grid)]
+    (count (mapcat (partial dfs-paths grid) trailheads))))
 
 (solve example-input) ; 36
 (solve (utils/read-input 10)) ; 582
+
+(solve2 example-input) ; 81
+(solve2 (utils/read-input 10)) ; 1302
