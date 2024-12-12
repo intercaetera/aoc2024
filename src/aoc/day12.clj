@@ -70,5 +70,36 @@ MMMISSJEEE")
         prices (map #(* (perimeter %) (area %)) regions)]
     (apply + prices)))
 
+(defn corners [[x y]]
+  [[[(dec x) y] [(dec x) (dec y)] [x (dec y)]]   ; top left
+   [[x (dec y)] [(inc x) (dec y)] [(inc x) y]]   ; top right
+   [[(inc x) y] [(inc x) (inc y)] [x (inc y)]]   ; bottom right
+   [[x (inc y)] [(dec x) (inc y)] [(dec x) y]]]) ; bottom left
+
+(defn corner-values [region corner] (mapv #(get region %) corner))
+
+(defn check-corner [[left diag top]] ; on the example of top left, but works for all
+  (cond
+    (and (nil? left) (nil? top)) 1
+    (and (some? left) (nil? diag) (some? top)) 1
+    :else 0))
+
+(defn sides-for-field [region] 
+  (fn [field]
+    (let [values (mapv (partial corner-values region) (corners field))]
+      (apply + (map check-corner values)))))
+
+(defn sides [region]
+  (apply + (map (sides-for-field region) region)))
+
+(defn solve2 [input]
+  (let [all-coords (parse input)
+        regions (mapcat (fn [[_key coords]] (partition-regions coords)) all-coords)
+        prices (map #(* (sides %) (area %)) regions)]
+    (apply + prices)))
+
 (solve example-input) ; 1930
 (solve (utils/read-input 12)) ; 1446042
+
+(solve2 example-input) ; 1206
+(solve2 (utils/read-input 12)) ; 902742
