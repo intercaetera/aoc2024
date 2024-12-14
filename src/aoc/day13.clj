@@ -74,8 +74,8 @@ Prize: X=18641, Y=10279")
         updated-games (map update-game games)]
     (apply + (map solve-game updated-games))))
 
-(solve example-input)
-(solve (utils/read-input 13))
+(solve example-input) ; 480
+(solve (utils/read-input 13)) ; 26810
 
 (solve2 example-input) ; 875318608908
 (solve2 (utils/read-input 13)) ; 108713182988244
